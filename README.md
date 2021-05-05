@@ -8,7 +8,7 @@ docker-compose up -d
 ```
 docker-compose exec backend bin/console doctrine:database:create
 
-docker-compose exec backend doctrine:migrations:migrate
+docker-compose exec backend bin/console doctrine:migrations:migrate
 ```
 
 Если требуется заполнить данными из Faker выполнить:
