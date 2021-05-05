@@ -1,0 +1,317 @@
+{
+	"info": {
+		"_postman_id": "2b7d3995-a907-45e4-943a-c5c8d393533c",
+		"name": "iSpring todo",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Create new Todo item",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Successful POST request\", function () {",
+							"    pm.expect(pm.response.code).to.be.oneOf([201, 202]);",
+							"    var jsonData = pm.response.json();",
+							"    ",
+							"    pm.collectionVariables.set(\"item_id\", jsonData.id);",
+							"});",
+							"pm.test(\"Content-Type is present\", function () {",
+							"    pm.response.to.have.header(\"Content-Type\");",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "formdata",
+					"formdata": [
+						{
+							"key": "content",
+							"value": "Test todo content string",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/todoitems",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todoitems"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get one ToDo item by id",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var lastCreatedItemId = pm.collectionVariables.get(\"item_id\");",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"ToDo item id eql \" + lastCreatedItemId, function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.id).to.eql(lastCreatedItemId);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todoitems/{{item_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todoitems",
+						"{{item_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get not completed todo item list",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Collection contains only not completed items\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    for (var i in jsonData) {",
+							"        pm.expect(jsonData[i].isCompleted).to.eql(0);",
+							"    }",
+							"    ",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todoitems",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todoitems"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Set ToDo Item completed",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var lastCreatedItemId = pm.collectionVariables.get(\"item_id\");",
+							"",
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"ToDo item id eql \" + lastCreatedItemId, function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.id).to.eql(lastCreatedItemId);",
+							"});",
+							"",
+							"pm.test(\"ToDo item is completed\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData.isCompleted).to.eql(1);",
+							"});",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todoitems/{{item_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todoitems",
+						"{{item_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get completed todo item list",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"pm.test(\"Your test name\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    for (var i in jsonData) {",
+							"        pm.expect(jsonData[i].isCompleted).to.eql(1);",
+							"    }",
+							"    ",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todoitems/completed",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todoitems",
+						"completed"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete Todo item",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 204\", function () {",
+							"    pm.response.to.have.status(204);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todoitems/{{item_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todoitems",
+						"{{item_id}}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get not existing item",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 404\", function () {",
+							"    pm.response.to.have.status(404);",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "http://localhost:8080/todoitems/{{item_id}}",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"todoitems",
+						"{{item_id}}"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:8080"
+		},
+		{
+			"key": "item_id",
+			"value": "0"
+		}
+	]
+}

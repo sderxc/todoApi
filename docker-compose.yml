@@ -1,0 +1,27 @@
+version: '3.7'
+
+volumes:
+    my-data:
+        driver: local
+
+services:
+    backend:
+        build: ./docker/php
+        environment:
+            docker: "true"
+        ports:
+            - 8080:8080
+        volumes:
+            - .:/var/www
+        links:
+            - mysql
+        # env_file:
+        #     - .env
+    mysql:
+        image: mysql:5.7
+        ports:
+            - 3306:3306
+        environment:
+            MYSQL_ALLOW_EMPTY_PASSWORD: 1
+        volumes:
+            - my-data:/var/lib/mysql
