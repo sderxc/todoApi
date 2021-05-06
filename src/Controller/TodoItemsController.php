@@ -2,7 +2,8 @@
 
 namespace App\Controller;
 
-use App\Repository\TodoItemRepository;
+use App\Entity\TodoItem;
+use App\Service\TodoItemService;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -16,30 +17,15 @@ use Symfony\Component\Routing\Annotation\Route;
  */
 class TodoItemsController
 {
-    private $todoItemRepository;
+    private $todoItemService;
 
     /**
      * TodoItemsController constructor.
-     * @param TodoItemRepository $todoItemRepository
+     * @param TodoItemService $todoItemService
      */
-    public function __construct(TodoItemRepository $todoItemRepository)
+    public function __construct(TodoItemService $todoItemService)
     {
-        $this->todoItemRepository = $todoItemRepository;
-    }
-
-    /**
-     * @param array $todoItemsArray
-     * @return array
-     */
-    private function prepareResponse(array $todoItemsArray): array
-    {
-        $data = [];
-
-        foreach ($todoItemsArray as $todoItem) {
-            $data[] = $todoItem->jsonSerialize();
-        }
-
-        return $data;
+        $this->todoItemService = $todoItemService;
     }
 
     /**
@@ -49,9 +35,9 @@ class TodoItemsController
     {
         $content = $request->get('content', '');
 
-        $newTodoItem = $this->todoItemRepository->addNewItem($content);
+        $newTodoItem = $this->todoItemService->addNewItem($content);
 
-        return new JsonResponse($newTodoItem, Response::HTTP_CREATED);
+        return $this->prepareResponse($newTodoItem, Response::HTTP_CREATED);
     }
 
     /**
@@ -59,9 +45,9 @@ class TodoItemsController
      */
     public function getTodoItem(int $id): JsonResponse
     {
-        $todoItem = $this->todoItemRepository->getItem($id);
+        $todoItem = $this->todoItemService->getItem($id);
 
-        return new JsonResponse($todoItem, Response::HTTP_OK);
+        return $this->prepareResponse($todoItem);
     }
 
     /**
@@ -69,9 +55,9 @@ class TodoItemsController
      */
     public function getNotCompleted(): JsonResponse
     {
-        $todoItems = $this->todoItemRepository->findNotCompleted();
+        $todoItems = $this->todoItemService->findNotCompleted();
 
-        return new JsonResponse($this->prepareResponse($todoItems), Response::HTTP_OK);
+        return $this->prepareResponse($todoItems);
     }
 
     /**
@@ -79,9 +65,9 @@ class TodoItemsController
      */
     public function getCompleted(): JsonResponse
     {
-        $todoItems = $this->todoItemRepository->finCompleted();
+        $todoItems = $this->todoItemService->finCompleted();
 
-        return new JsonResponse($this->prepareResponse($todoItems), Response::HTTP_OK);
+        return $this->prepareResponse($todoItems);
     }
 
     /**
@@ -89,12 +75,9 @@ class TodoItemsController
      */
     public function markAsCompleted(int $id): JsonResponse
     {
-        $todoItem = $this->todoItemRepository->getItem($id);
+        $todoItem = $this->todoItemService->markAsCompleted($id);
 
-        $todoItem->setIsCompleted();
-        $this->todoItemRepository->updateItem($todoItem);
-
-        return new JsonResponse($todoItem, Response::HTTP_OK);
+        return $this->prepareResponse($todoItem);
     }
 
     /**
@@ -102,10 +85,27 @@ class TodoItemsController
      */
     public function deleteTodoItem(int $id): JsonResponse
     {
-        $todoItem = $this->todoItemRepository->getItem($id);
-
-        $this->todoItemRepository->removeItem($todoItem);
+        $this->todoItemService->removeItem($id);
 
         return new JsonResponse(['status' => 'TODO item deleted'], Response::HTTP_NO_CONTENT);
+    }
+
+    /**
+     * @param TodoItem[]|TodoItem $todoItem
+     * @return array
+     */
+    private function prepareResponse($data, $status = Response::HTTP_OK): JsonResponse
+    {
+        $_data = [];
+
+        if (is_array($data)) {
+            foreach ($data as $todoItem) {
+                $_data[] = $this->todoItemService->todoItemToArray($todoItem);
+            }
+        } else {
+            $_data = $this->todoItemService->todoItemToArray($data);
+        }
+
+        return new JsonResponse($_data, $status);
     }
 }

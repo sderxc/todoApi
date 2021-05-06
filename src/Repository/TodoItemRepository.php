@@ -3,10 +3,10 @@
 namespace App\Repository;
 
 use App\Entity\TodoItem;
+use App\Service\TodoItemStorageInterface;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * @method TodoItem|null find($id, $lockMode = null, $lockVersion = null)
@@ -14,7 +14,7 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  * @method TodoItem[]    findAll()
  * @method TodoItem[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class TodoItemRepository extends ServiceEntityRepository
+class TodoItemRepository extends ServiceEntityRepository implements TodoItemStorageInterface
 {
 
     private $manager;
@@ -30,66 +30,45 @@ class TodoItemRepository extends ServiceEntityRepository
         $this->manager = $manager;
     }
 
-    /**
-     * @param int $id
-     * @return TodoItem
-     */
-    public function getItem(int $id): TodoItem
+    public function startTransaction(): void
     {
-        $todoItem = $this->findOneBy(['id' => $id]);
-
-        if (!$todoItem) {
-            throw new NotFoundHttpException(sprintf('ToDo Item %s not found', $id));
-        }
-
-        return $todoItem;
+        $this->manager->getConnection()->beginTransaction();
     }
 
-    /**
-     * @param string $content
-     * @return TodoItem
-     */
-    public function addNewItem(string $content): TodoItem
+    public function commit(): void
     {
-        $newTodoItem = new TodoItem($content);
-
-        $this->manager->persist($newTodoItem);
-        $this->manager->flush();
-
-        return $newTodoItem;
+        $this->manager->getConnection()->commit();
     }
 
-    /**
-     * @param TodoItem $todoItem
-     */
-    public function updateItem(TodoItem $todoItem): void
+    public function rollBackTransaction(): void
     {
-        $this->manager->persist($todoItem);
+        $this->manager->getConnection()->rollBack();
+    }
+
+    public function addItem($item): void
+    {
+        $this->manager->persist($item);
         $this->manager->flush();
     }
 
-    /**
-     * @param TodoItem $todoItem
-     */
-    public function removeItem(TodoItem $todoItem): void
+    public function getItemById(int $id): ?TodoItem
     {
-        $this->manager->remove($todoItem);
+        return $this->findOneBy(['id' => $id]);
+    }
+
+    public function getItemsByParams(array $params): array
+    {
+        return $this->findBy($params);
+    }
+
+    public function updateItem($item): void
+    {
+        $this->addItem($item);
+    }
+
+    public function deleteItem($item): void
+    {
+        $this->manager->remove($item);
         $this->manager->flush();
-    }
-
-    /**
-     * @return TodoItem[]
-     */
-    public function findNotCompleted(): array
-    {
-        return $this->findBy(['isCompleted' => TodoItem::NOT_COMPLETED]);
-    }
-
-    /**
-     * @return TodoItem[]
-     */
-    public function finCompleted(): array
-    {
-        return $this->findBy(['isCompleted' => TodoItem::IS_COMPLETED]);
     }
 }
